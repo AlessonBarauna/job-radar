@@ -1,0 +1,133 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ─── Base ─────────────────────────────────────────────── */
+@layer base {
+  * {
+    box-sizing: border-box;
+    scrollbar-width: thin;
+    scrollbar-color: #1a2744 #050810;
+  }
+
+  *::-webkit-scrollbar {
+    width: 6px;
+  }
+  *::-webkit-scrollbar-track {
+    background: #050810;
+  }
+  *::-webkit-scrollbar-thumb {
+    background-color: #1a2744;
+    border-radius: 3px;
+  }
+
+  html, body {
+    @apply bg-cyber-bg text-white font-sans antialiased;
+    min-height: 100vh;
+  }
+
+  ::selection {
+    background-color: rgba(0, 212, 255, 0.3);
+    color: #fff;
+  }
+}
+
+/* ─── Components ───────────────────────────────────────── */
+@layer components {
+  /* Card cyberpunk com borda glow */
+  .cyber-card {
+    @apply bg-cyber-card border border-cyber-border rounded-xl p-5 transition-all duration-300;
+    background: linear-gradient(135deg, #0d1528 0%, #0a0f1e 100%);
+  }
+  .cyber-card:hover {
+    @apply border-cyber-blue/40;
+    box-shadow: 0 0 20px rgba(0, 212, 255, 0.15), 0 4px 24px rgba(0, 0, 0, 0.4);
+    transform: translateY(-2px);
+  }
+
+  /* Input neon */
+  .cyber-input {
+    @apply bg-cyber-surface border border-cyber-border rounded-lg px-4 py-3
+           text-white placeholder-gray-500 outline-none transition-all duration-200
+           font-mono text-sm w-full;
+  }
+  .cyber-input:focus {
+    @apply border-cyber-blue/60;
+    box-shadow: 0 0 0 2px rgba(0, 212, 255, 0.15), 0 0 12px rgba(0, 212, 255, 0.2);
+  }
+
+  /* Botão primário */
+  .cyber-btn {
+    @apply px-6 py-3 rounded-lg font-semibold text-sm transition-all duration-200
+           flex items-center gap-2 cursor-pointer select-none;
+    background: linear-gradient(135deg, #00d4ff, #8b5cf6);
+    color: #050810;
+  }
+  .cyber-btn:hover {
+    box-shadow: 0 0 20px rgba(0, 212, 255, 0.5), 0 0 40px rgba(139, 92, 246, 0.3);
+    transform: translateY(-1px);
+  }
+  .cyber-btn:active {
+    transform: translateY(0);
+  }
+  .cyber-btn:disabled {
+    @apply opacity-50 cursor-not-allowed;
+    transform: none;
+    box-shadow: none;
+  }
+
+  /* Badge keyword highlight */
+  .keyword-badge {
+    @apply inline-flex items-center px-2 py-0.5 rounded text-xs font-mono font-medium;
+    background: rgba(0, 212, 255, 0.1);
+    color: #00d4ff;
+    border: 1px solid rgba(0, 212, 255, 0.3);
+  }
+
+  /* Score bar */
+  .score-bar {
+    @apply h-1 rounded-full;
+    background: linear-gradient(90deg, #8b5cf6, #00d4ff);
+  }
+
+  /* Scanline overlay (decorativo) */
+  .scanlines::after {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 2px,
+      rgba(0, 0, 0, 0.03) 2px,
+      rgba(0, 0, 0, 0.03) 4px
+    );
+    pointer-events: none;
+    z-index: 999;
+  }
+
+  /* Grid background decorativo */
+  .cyber-grid {
+    background-image:
+      linear-gradient(rgba(0, 212, 255, 0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0, 212, 255, 0.03) 1px, transparent 1px);
+    background-size: 40px 40px;
+  }
+
+  /* Tag tipo resultado */
+  .tag-job {
+    @apply text-xs px-2 py-0.5 rounded font-mono;
+    background: rgba(0, 255, 136, 0.1);
+    color: #00ff88;
+    border: 1px solid rgba(0, 255, 136, 0.3);
+  }
+  .tag-post {
+    @apply text-xs px-2 py-0.5 rounded font-mono;
+    background: rgba(139, 92, 246, 0.1);
+    color: #a78bfa;
+    border: 1px solid rgba(139, 92, 246, 0.3);
+  }
+}
