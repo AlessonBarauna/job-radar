@@ -1,13 +1,10 @@
-using JobRadar.API.Services.Interfaces;
+using JobRadar.Application.Interfaces;
 
 namespace JobRadar.API.Workers;
 
 /// <summary>
-/// Background worker que dispara buscas automáticas a cada hora
-/// para keywords configuradas em appsettings: Worker:Keywords.
-///
-/// Útil para pre-aquecer o cache com termos populares.
-/// Desative via appsettings: Worker:Enabled = false.
+/// Background worker que pre-aquece o cache com keywords configuradas em appsettings.
+/// Desabilitado por padrão: Worker:Enabled = false.
 /// </summary>
 public class JobCollectorWorker(
     IServiceScopeFactory scopeFactory,
@@ -21,13 +18,11 @@ public class JobCollectorWorker(
     {
         if (!configuration.GetValue("Worker:Enabled", false))
         {
-            logger.LogInformation("JobCollectorWorker desabilitado (Worker:Enabled=false).");
+            logger.LogInformation("JobCollectorWorker desabilitado.");
             return;
         }
 
-        logger.LogInformation("JobCollectorWorker iniciado. Intervalo: {Interval}h", _interval.TotalHours);
-
-        // Aguarda 30s no startup para não sobrecarregar a inicialização
+        logger.LogInformation("JobCollectorWorker iniciado. Intervalo: {H}h", _interval.TotalHours);
         await Task.Delay(TimeSpan.FromSeconds(30), stoppingToken);
 
         while (!stoppingToken.IsCancellationRequested)
@@ -40,9 +35,9 @@ public class JobCollectorWorker(
     private async Task CollectAsync(CancellationToken ct)
     {
         var keywordSets = configuration.GetSection("Worker:Keywords").Get<string[]>()
-                          ?? [".net,csharp", "angular,frontend", "aws,cloud"];
+                          ?? ["dotnet,csharp", "angular,typescript", "aws,devops"];
 
-        using var scope = scopeFactory.CreateScope();
+        using var scope         = scopeFactory.CreateScope();
         var searchService = scope.ServiceProvider.GetRequiredService<IJobSearchService>();
 
         foreach (var keywords in keywordSets)
@@ -52,11 +47,11 @@ public class JobCollectorWorker(
             {
                 logger.LogInformation("Worker coletando: {Keywords}", keywords);
                 await searchService.SearchAsync(keywords, ct);
-                await Task.Delay(TimeSpan.FromSeconds(5), ct); // rate limiting
+                await Task.Delay(TimeSpan.FromSeconds(5), ct);
             }
             catch (Exception ex) when (ex is not OperationCanceledException)
             {
-                logger.LogError(ex, "Worker falhou para keywords: {Keywords}", keywords);
+                logger.LogError(ex, "Worker falhou para: {Keywords}", keywords);
             }
         }
     }

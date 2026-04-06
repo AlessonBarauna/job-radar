@@ -1,37 +1,33 @@
-using JobRadar.API.DTOs;
-using JobRadar.API.Services.Interfaces;
+using JobRadar.Application.DTOs;
+using JobRadar.Application.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 
 namespace JobRadar.API.Controllers;
 
 /// <summary>
-/// Endpoints de busca de vagas e posts do LinkedIn.
+/// Endpoints de busca de vagas.
 /// </summary>
 [ApiController]
 [Route("api/[controller]")]
 [Produces("application/json")]
 public class JobsController(IJobSearchService searchService, ILogger<JobsController> logger) : ControllerBase
 {
-    /// <summary>
-    /// Busca vagas e posts do LinkedIn publicados nas últimas 24h.
-    /// </summary>
-    /// <param name="keywords">Palavras-chave separadas por vírgula (ex: .net,aws,csharp)</param>
-    /// <param name="ct">Token de cancelamento</param>
-    /// <returns>Lista de resultados ordenados por relevância</returns>
-    /// <response code="200">Busca executada com sucesso</response>
-    /// <response code="400">Keywords não fornecidas</response>
+    /// <summary>Busca vagas pelos provedores configurados, ordenadas por relevância.</summary>
+    /// <param name="keywords">Palavras-chave separadas por vírgula (ex: dotnet,aws,angular)</param>
     [HttpGet("search")]
     [ProducesResponseType(typeof(SearchResponseDto), StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    public async Task<IActionResult> Search(
-        [FromQuery] string keywords,
-        CancellationToken ct)
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> Search([FromQuery] string keywords, CancellationToken ct)
     {
         if (string.IsNullOrWhiteSpace(keywords))
-            return BadRequest(new { error = "O parâmetro 'keywords' é obrigatório." });
+            return BadRequest(new ProblemDetails
+            {
+                Title  = "Parâmetro obrigatório",
+                Detail = "O parâmetro 'keywords' é obrigatório.",
+                Status = 400
+            });
 
         logger.LogInformation("Busca recebida: {Keywords}", keywords);
-
         var result = await searchService.SearchAsync(keywords, ct);
         return Ok(result);
     }
