@@ -4,9 +4,10 @@ import { FormsModule } from '@angular/forms';
 import { JobResult, SearchResponse } from '../../models/job-result.model';
 import { JobCardComponent } from '../job-card/job-card.component';
 
-type TypeFilter   = 'all' | 'job' | 'post';
-type SortOrder    = 'relevance' | 'date';
-type SourceFilter = 'all' | string;
+type TypeFilter     = 'all' | 'job' | 'post';
+type SortOrder      = 'relevance' | 'date';
+type SourceFilter   = 'all' | string;
+type WorkplaceFilter = 'all' | 'remote' | 'hybrid' | 'onsite';
 
 @Component({
   selector: 'app-results',
@@ -43,23 +44,40 @@ type SourceFilter = 'all' | string;
       </div>
 
       <!-- ─── Barra de filtros ──────────────────────────────────────── -->
-      <div class="flex flex-wrap gap-2 mb-5 items-center justify-between">
+      <div class="flex flex-col gap-2 mb-5">
 
-        <!-- Filtro por tipo -->
-        <div class="flex gap-2">
-          @for (opt of typeOptions; track opt.value) {
-            <button (click)="typeFilter.set(opt.value)"
-                    class="text-xs px-3 py-1.5 rounded-lg font-mono transition-all duration-200"
-                    [class]="typeFilter() === opt.value
-                      ? 'bg-cyber-blue/20 text-cyber-blue border border-cyber-blue/40'
-                      : 'text-gray-500 border border-cyber-border/60 hover:border-cyber-blue/30'">
-              {{ opt.label }} ({{ countByType(opt.value) }})
-            </button>
-          }
+        <!-- Linha 1: tipo + modalidade -->
+        <div class="flex flex-wrap gap-2 items-center justify-between">
+
+          <!-- Filtro por tipo -->
+          <div class="flex gap-2">
+            @for (opt of typeOptions; track opt.value) {
+              <button (click)="typeFilter.set(opt.value)"
+                      class="text-xs px-3 py-1.5 rounded-lg font-mono transition-all duration-200"
+                      [class]="typeFilter() === opt.value
+                        ? 'bg-cyber-blue/20 text-cyber-blue border border-cyber-blue/40'
+                        : 'text-gray-500 border border-cyber-border/60 hover:border-cyber-blue/30'">
+                {{ opt.label }} ({{ countByType(opt.value) }})
+              </button>
+            }
+          </div>
+
+          <!-- Filtro por modalidade -->
+          <div class="flex gap-2">
+            @for (opt of workplaceOptions; track opt.value) {
+              <button (click)="workplaceFilter.set(opt.value)"
+                      class="text-xs px-3 py-1.5 rounded-lg font-mono transition-all duration-200"
+                      [class]="workplaceFilter() === opt.value
+                        ? 'bg-cyber-purple/20 text-cyber-purple border border-cyber-purple/40'
+                        : 'text-gray-500 border border-cyber-border/60 hover:border-cyber-purple/30'">
+                {{ opt.label }} ({{ countByWorkplace(opt.value) }})
+              </button>
+            }
+          </div>
         </div>
 
-        <div class="flex gap-2 items-center">
-          <!-- Filtro por provedor -->
+        <!-- Linha 2: provedor + ordenação -->
+        <div class="flex gap-2 items-center justify-end">
           @if (availableSources().length > 1) {
             <select [(ngModel)]="sourceFilterValue"
                     class="text-xs bg-transparent border border-cyber-border/60 text-gray-400
@@ -72,7 +90,6 @@ type SourceFilter = 'all' | string;
             </select>
           }
 
-          <!-- Ordenação -->
           <select [(ngModel)]="sortOrderValue"
                   class="text-xs bg-transparent border border-cyber-border/60 text-gray-400
                          rounded-lg px-2 py-1.5 font-mono cursor-pointer
@@ -114,20 +131,28 @@ export class ResultsComponent {
   private _response: SearchResponse | null = null;
 
   // ─── Signals de filtro ───────────────────────────────────────────────
-  typeFilter   = signal<TypeFilter>('all');
-  sortOrder    = signal<SortOrder>('relevance');
-  sourceFilter = signal<SourceFilter>('all');
+  typeFilter      = signal<TypeFilter>('all');
+  sortOrder       = signal<SortOrder>('relevance');
+  sourceFilter    = signal<SourceFilter>('all');
+  workplaceFilter = signal<WorkplaceFilter>('all');
 
-  // Wrappers para ngModel (signals não são suportados diretamente no ngModel)
+  // Wrappers para ngModel
   get sortOrderValue()    { return this.sortOrder(); }
   set sortOrderValue(v: SortOrder)   { this.sortOrder.set(v); }
   get sourceFilterValue() { return this.sourceFilter(); }
   set sourceFilterValue(v: string)   { this.sourceFilter.set(v); }
 
   readonly typeOptions = [
-    { value: 'all'  as TypeFilter, label: 'Todos'  },
-    { value: 'job'  as TypeFilter, label: 'Vagas'  },
-    { value: 'post' as TypeFilter, label: 'Posts'  },
+    { value: 'all'  as TypeFilter, label: 'Todos' },
+    { value: 'job'  as TypeFilter, label: 'Vagas' },
+    { value: 'post' as TypeFilter, label: 'Posts' },
+  ];
+
+  readonly workplaceOptions = [
+    { value: 'all'     as WorkplaceFilter, label: 'Qualquer' },
+    { value: 'remote'  as WorkplaceFilter, label: '🌐 Remoto'    },
+    { value: 'hybrid'  as WorkplaceFilter, label: '🔀 Híbrido'   },
+    { value: 'onsite'  as WorkplaceFilter, label: '🏢 Presencial' },
   ];
 
   // ─── Computed ───────────────────────────────────────────────────────
@@ -146,6 +171,9 @@ export class ResultsComponent {
     if (this.sourceFilter() !== 'all')
       results = results.filter(r => r.source === this.sourceFilter());
 
+    if (this.workplaceFilter() !== 'all')
+      results = results.filter(r => r.workplaceType === this.workplaceFilter());
+
     if (this.sortOrder() === 'date')
       results.sort((a, b) => new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime());
 
@@ -159,10 +187,17 @@ export class ResultsComponent {
     return this._response.results.filter(r => r.resultType === type).length;
   }
 
+  countByWorkplace(type: WorkplaceFilter): number {
+    if (!this._response) return 0;
+    if (type === 'all') return this._response.results.length;
+    return this._response.results.filter(r => r.workplaceType === type).length;
+  }
+
   resetFilters(): void {
     this.typeFilter.set('all');
     this.sortOrder.set('relevance');
     this.sourceFilter.set('all');
+    this.workplaceFilter.set('all');
   }
 
   formatTime(dateStr: string): string {
