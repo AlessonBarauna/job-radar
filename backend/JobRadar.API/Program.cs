@@ -36,11 +36,21 @@ builder.Services.AddHttpClient("Jooble", c =>
     c.Timeout = TimeSpan.FromSeconds(10);
     c.DefaultRequestHeaders.UserAgent.ParseAdd("JobRadar/1.0");
 });
+builder.Services.AddHttpClient("IndeedRss", c =>
+{
+    c.Timeout = TimeSpan.FromSeconds(15);
+    // Indeed exige um User-Agent realista para retornar o RSS
+    c.DefaultRequestHeaders.UserAgent.ParseAdd(
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36");
+    c.DefaultRequestHeaders.Add("Accept", "application/rss+xml, application/xml, text/xml");
+    c.DefaultRequestHeaders.Add("Accept-Language", "pt-BR,pt;q=0.9");
+});
 
 // ─── Services ────────────────────────────────────────────────────────────────
 builder.Services.AddScoped<IBingSearchService, BingSearchService>();
 builder.Services.AddScoped<IGoogleCustomSearchService, GoogleCustomSearchService>();
 builder.Services.AddScoped<IRemotiveSearchService, RemotiveSearchService>();
+builder.Services.AddScoped<IIndeedRssSearchService, IndeedRssSearchService>();
 builder.Services.AddScoped<IJoobleSearchService, JoobleSearchService>();
 builder.Services.AddScoped<IRelevanceService, RelevanceService>();
 builder.Services.AddScoped<ISearchHistoryRepository, SearchHistoryRepository>();

@@ -10,13 +10,18 @@ namespace JobRadar.API.Services;
 
 /// <summary>
 /// Serviço principal de busca.
-/// Estratégia de provedor em cascata: Bing → Google CSE → Remotive → Jooble → Mock.
+/// Estratégia:
+///   1. Bing ou Google (se configurados) — retorna imediatamente.
+///   2. Remotive + Indeed Brasil em paralelo (gratuitos, sem API key) — combina os resultados.
+///   3. Jooble (se configurado).
+///   4. Mock como último fallback.
 /// Aplica cache de 15 minutos por conjunto de keywords.
 /// </summary>
 public class JobSearchService(
     IBingSearchService bingService,
     IGoogleCustomSearchService googleService,
     IRemotiveSearchService remotiveService,
+    IIndeedRssSearchService indeedService,
     IJoobleSearchService joobleService,
     IRelevanceService relevanceService,
     ISearchHistoryRepository historyRepo,
@@ -124,16 +129,24 @@ public class JobSearchService(
             }
         }
 
-        // Remotive (gratuito, sem API key — vagas remotas reais)
-        try
+        // Remotive + Indeed Brasil em paralelo (gratuitos, sem API key)
+        logger.LogInformation("Usando provedores gratuitos: Remotive + Indeed Brasil (paralelo)");
+        var remotiveTask = FetchSafe(() => remotiveService.SearchAsync(keywords, ct), "Remotive");
+        var indeedTask   = FetchSafe(() => indeedService.SearchAsync(keywords, ct), "Indeed RSS");
+
+        await Task.WhenAll(remotiveTask, indeedTask);
+
+        var freeResults = remotiveTask.Result.Concat(indeedTask.Result).ToList();
+        if (freeResults.Count > 0)
         {
-            logger.LogInformation("Usando provedor: Remotive");
-            var results = await remotiveService.SearchAsync(keywords, ct);
-            if (results.Count > 0) return (results, "Remotive");
-        }
-        catch (Exception ex)
-        {
-            logger.LogWarning(ex, "Remotive falhou, tentando Jooble.");
+            var providerLabel = (remotiveTask.Result.Count > 0, indeedTask.Result.Count > 0) switch
+            {
+                (true, true)   => "Remotive + Indeed",
+                (true, false)  => "Remotive",
+                (false, true)  => "Indeed",
+                _              => "Gratuito"
+            };
+            return (freeResults, providerLabel);
         }
 
         // Jooble (gratuito com API key — vagas brasileiras)
@@ -159,6 +172,22 @@ public class JobSearchService(
     // -------------------------------------------------
     // Helpers
     // -------------------------------------------------
+
+    /// <summary>
+    /// Executa uma busca capturando exceções — retorna lista vazia em caso de falha.
+    /// Usado para chamar provedores em paralelo sem interromper os demais.
+    /// </summary>
+    private async Task<List<JobResult>> FetchSafe(
+        Func<Task<List<JobResult>>> fetch, string providerName)
+    {
+        try { return await fetch(); }
+        catch (Exception ex)
+        {
+            logger.LogWarning(ex, "Provedor '{Provider}' falhou.", providerName);
+            return [];
+        }
+    }
+
     private static List<string> ParseKeywords(string input) =>
         input.Split([',', ';', ' '], StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
              .Where(k => k.Length >= 2)
