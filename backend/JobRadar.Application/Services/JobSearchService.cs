@@ -118,7 +118,13 @@ public class JobSearchService(
                 .ToList();
 
             var allResults = await Task.WhenAll(tasks);
-            var combined = allResults.SelectMany(r => r).ToList();
+
+            // Deduplica por URL entre providers (mesma vaga pode aparecer em Gupy + Jobicy)
+            var seenUrls = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            var combined = allResults
+                .SelectMany(r => r)
+                .Where(r => seenUrls.Add(r.Url))
+                .ToList();
 
             if (combined.Count > 0)
             {
@@ -175,11 +181,16 @@ public class JobSearchService(
     };
 
     private static string InferSource(string url) =>
+        url.Contains("gupy.io",       StringComparison.OrdinalIgnoreCase) ? "Gupy"      :
+        url.Contains("jobicy.com",    StringComparison.OrdinalIgnoreCase) ? "Jobicy"    :
         url.Contains("remotive.com",  StringComparison.OrdinalIgnoreCase) ? "Remotive"  :
+        url.Contains("adzuna.com",    StringComparison.OrdinalIgnoreCase) ? "Adzuna"    :
         url.Contains("indeed.com",    StringComparison.OrdinalIgnoreCase) ? "Indeed"    :
         url.Contains("linkedin.com",  StringComparison.OrdinalIgnoreCase) ? "LinkedIn"  :
         url.Contains("jooble.org",    StringComparison.OrdinalIgnoreCase) ? "Jooble"    :
         url.Contains("glassdoor.com", StringComparison.OrdinalIgnoreCase) ? "Glassdoor" :
+        url.Contains("bing.com",      StringComparison.OrdinalIgnoreCase) ? "Bing"      :
+        url.Contains("google.com",    StringComparison.OrdinalIgnoreCase) ? "Google"    :
         "Externo";
 
     private static string ToRelativeTime(DateTime dt)
