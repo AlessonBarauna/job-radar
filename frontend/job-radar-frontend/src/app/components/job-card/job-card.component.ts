@@ -147,10 +147,15 @@ export class JobCardComponent {
   getSourceStyle(source: string): string {
     const styles: Record<string, string> = {
       'Remotive':  'background:rgba(0,212,255,0.1);color:#00d4ff;border:1px solid rgba(0,212,255,0.25)',
+      'Jobicy':    'background:rgba(234,179,8,0.1);color:#facc15;border:1px solid rgba(234,179,8,0.25)',
+      'Gupy':      'background:rgba(34,197,94,0.1);color:#4ade80;border:1px solid rgba(34,197,94,0.25)',
+      'Adzuna':    'background:rgba(249,115,22,0.1);color:#fb923c;border:1px solid rgba(249,115,22,0.25)',
       'Indeed':    'background:rgba(139,92,246,0.1);color:#a78bfa;border:1px solid rgba(139,92,246,0.25)',
       'LinkedIn':  'background:rgba(14,118,168,0.15);color:#60b8f5;border:1px solid rgba(14,118,168,0.3)',
       'Jooble':    'background:rgba(0,255,136,0.08);color:#00ff88;border:1px solid rgba(0,255,136,0.2)',
       'Glassdoor': 'background:rgba(0,255,136,0.08);color:#00ff88;border:1px solid rgba(0,255,136,0.2)',
+      'Bing':      'background:rgba(0,120,212,0.1);color:#60a5fa;border:1px solid rgba(0,120,212,0.25)',
+      'Google':    'background:rgba(234,67,53,0.1);color:#f87171;border:1px solid rgba(234,67,53,0.25)',
     };
     return styles[source] ?? 'background:rgba(100,100,100,0.1);color:#9ca3af;border:1px solid rgba(100,100,100,0.2)';
   }

@@ -38,7 +38,7 @@ import { HistoryComponent } from '../history/history.component';
         </div>
 
         <p class="text-gray-500 text-sm font-mono mt-2 relative z-10">
-          Remotive · Indeed · LinkedIn // vagas reais // ordenadas por relevância
+          Gupy BR · Jobicy · Remotive // vagas reais // ordenadas por relevância
         </p>
 
         <!-- Linha decorativa -->
@@ -143,7 +143,7 @@ import { HistoryComponent } from '../history/history.component';
                   </p>
                   <div class="flex items-center gap-2 text-xs text-gray-600 font-mono">
                     <span class="text-cyber-green">✓</span> dados públicos reais
-                    <span class="text-cyber-green ml-2">✓</span> Remotive · Indeed · LinkedIn
+                    <span class="text-cyber-green ml-2">✓</span> Gupy · Jobicy · Remotive
                   </div>
                 </div>
               </div>
@@ -216,7 +216,7 @@ import { HistoryComponent } from '../history/history.component';
       <!-- ═══ FOOTER ═══════════════════════════════════════════ -->
       <footer class="border-t border-cyber-border/30 py-6 px-4 text-center">
         <p class="text-gray-600 text-xs font-mono">
-          JobRadar v1.0 · Remotive · Indeed Brasil · LinkedIn · dados públicos
+          JobRadar v2.0 · Gupy BR · Jobicy · Remotive · dados públicos reais
         </p>
       </footer>
     </div>
