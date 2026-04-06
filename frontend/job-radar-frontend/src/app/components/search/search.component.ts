@@ -38,7 +38,7 @@ import { HistoryComponent } from '../history/history.component';
         </div>
 
         <p class="text-gray-500 text-sm font-mono mt-2 relative z-10">
-          vagas + posts do LinkedIn // últimas 24h // ordenados por relevância
+          Remotive · Indeed · LinkedIn // vagas reais // ordenadas por relevância
         </p>
 
         <!-- Linha decorativa -->
@@ -64,7 +64,7 @@ import { HistoryComponent } from '../history/history.component';
                 [(ngModel)]="searchInput"
                 name="keywords"
                 class="cyber-input pl-10"
-                placeholder=".net, aws, angular, csharp..."
+                placeholder="dotnet, aws, angular, python, react..."
                 autocomplete="off"
                 [disabled]="loading()"
                 (keydown.enter)="onSearch()">
@@ -142,8 +142,8 @@ import { HistoryComponent } from '../history/history.component';
                     Digite palavras-chave e pressione buscar
                   </p>
                   <div class="flex items-center gap-2 text-xs text-gray-600 font-mono">
-                    <span class="text-cyber-green">✓</span> apenas dados públicos indexados
-                    <span class="text-cyber-green ml-2">✓</span> últimas 24h
+                    <span class="text-cyber-green">✓</span> dados públicos reais
+                    <span class="text-cyber-green ml-2">✓</span> Remotive · Indeed · LinkedIn
                   </div>
                 </div>
               </div>
@@ -216,7 +216,7 @@ import { HistoryComponent } from '../history/history.component';
       <!-- ═══ FOOTER ═══════════════════════════════════════════ -->
       <footer class="border-t border-cyber-border/30 py-6 px-4 text-center">
         <p class="text-gray-600 text-xs font-mono">
-          JobRadar v1.0 · apenas dados públicos indexados · sem scraping autenticado
+          JobRadar v1.0 · Remotive · Indeed Brasil · LinkedIn · dados públicos
         </p>
       </footer>
     </div>
@@ -236,8 +236,9 @@ export class SearchComponent implements OnInit {
   skeletons = Array(6).fill(0);
 
   suggestions = [
-    '.net, csharp', 'angular, frontend', 'aws, devops',
-    'fullstack, react', 'python, backend', 'node, typescript'
+    'dotnet, csharp', 'angular, typescript', 'aws, devops',
+    'fullstack, react', 'python, django', 'node, backend',
+    'java, spring', 'golang, backend'
   ];
 
   ngOnInit(): void {

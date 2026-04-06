@@ -206,8 +206,17 @@ public class JobSearchService(
         RelevanceScore = r.RelevanceScore,
         MatchedKeywords = r.MatchedKeywords.Split(',', StringSplitOptions.RemoveEmptyEntries).ToList(),
         ResultType = r.ResultType,
-        RelativeTime = ToRelativeTime(r.PublishedAt)
+        RelativeTime = ToRelativeTime(r.PublishedAt),
+        Source = InferSource(r.Url)
     };
+
+    private static string InferSource(string url) =>
+        url.Contains("remotive.com",  StringComparison.OrdinalIgnoreCase) ? "Remotive"  :
+        url.Contains("indeed.com",    StringComparison.OrdinalIgnoreCase) ? "Indeed"    :
+        url.Contains("linkedin.com",  StringComparison.OrdinalIgnoreCase) ? "LinkedIn"  :
+        url.Contains("jooble.org",    StringComparison.OrdinalIgnoreCase) ? "Jooble"    :
+        url.Contains("glassdoor.com", StringComparison.OrdinalIgnoreCase) ? "Glassdoor" :
+        "Externo";
 
     private static string ToRelativeTime(DateTime dt)
     {
