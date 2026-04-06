@@ -53,6 +53,7 @@ builder.Services.AddHttpClient("Remotive", c => ConfigureClient(c, timeout: 15))
 builder.Services.AddHttpClient("Jooble",   c => ConfigureClient(c));
 builder.Services.AddHttpClient("Jobicy",   c => ConfigureClient(c, timeout: 15));
 builder.Services.AddHttpClient("Adzuna",   c => ConfigureClient(c, timeout: 15));
+builder.Services.AddHttpClient("Gupy",     c => ConfigureClient(c, timeout: 15));
 
 static void ConfigureClient(HttpClient c, int timeout = 10)
 {
@@ -75,6 +76,7 @@ builder.Services.AddScoped<IJobProvider, AdzunaProvider>();
 builder.Services.AddScoped<IJobProvider, JoobleProvider>();
 builder.Services.AddScoped<IJobProvider, RemotiveProvider>();
 builder.Services.AddScoped<IJobProvider, JobicyProvider>();
+builder.Services.AddScoped<IJobProvider, GupyProvider>();
 builder.Services.AddScoped<IJobProvider, MockProvider>();
 
 // ─── Application Services ─────────────────────────────────────────────────
@@ -92,7 +94,7 @@ builder.Services.AddSwaggerGen(c =>
     {
         Title       = "JobRadar API",
         Version     = "v2",
-        Description = "Busca inteligente de vagas — Jobicy · Remotive · Adzuna · Bing · Google."
+        Description = "Busca inteligente de vagas — Gupy BR · Jobicy · Remotive · Adzuna · Bing · Google."
     });
 });
 
