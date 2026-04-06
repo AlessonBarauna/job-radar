@@ -14,6 +14,14 @@ import { JobResult } from '../../models/job-result.model';
            style="background: linear-gradient(90deg, transparent, #00d4ff, transparent);">
       </div>
 
+      <!-- Banner DEMO quando Mock -->
+      @if (isDemo) {
+        <div class="mb-3 -mx-4 -mt-4 px-4 py-2 text-xs font-mono flex items-center gap-2"
+             style="background:rgba(251,191,36,0.08);border-bottom:1px solid rgba(251,191,36,0.2);color:#fbbf24">
+          ⚠️ Dados de demonstração — configure um provedor real para ver vagas reais
+        </div>
+      }
+
       <!-- Header: tipo + provedor + tempo -->
       <div class="flex items-center justify-between mb-3">
         <div class="flex items-center gap-2">
@@ -83,24 +91,31 @@ import { JobResult } from '../../models/job-result.model';
           {{ formatDate(result.publishedAt) }}
         </span>
 
+        <!-- Botão: mock abre busca real no LinkedIn, real abre a vaga diretamente -->
         <a [href]="result.url"
            target="_blank"
            rel="noopener noreferrer"
            class="flex items-center gap-2 text-xs font-semibold px-4 py-2 rounded-lg transition-all duration-200"
-           style="background: rgba(0, 212, 255, 0.1); color: #00d4ff; border: 1px solid rgba(0, 212, 255, 0.3);"
-           onmouseover="this.style.background='rgba(0,212,255,0.2)'; this.style.boxShadow='0 0 12px rgba(0,212,255,0.3)'"
-           onmouseout="this.style.background='rgba(0,212,255,0.1)'; this.style.boxShadow='none'">
-          <!-- Ícone LinkedIn apenas para vagas do LinkedIn -->
-          @if (result.source === 'LinkedIn') {
+           [style]="isDemo
+             ? 'background:rgba(251,191,36,0.1);color:#fbbf24;border:1px solid rgba(251,191,36,0.3)'
+             : 'background:rgba(0,212,255,0.1);color:#00d4ff;border:1px solid rgba(0,212,255,0.3)'"
+           [title]="isDemo ? 'Abre busca real no LinkedIn (vaga é demonstração)' : 'Abre a vaga original'">
+          @if (isDemo) {
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+            </svg>
+            Buscar no LinkedIn
+          } @else if (result.source === 'LinkedIn') {
             <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
               <path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z"/>
             </svg>
+            Ver no LinkedIn
           } @else {
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6M15 3h6v6M10 14L21 3"/>
             </svg>
+            Ver vaga
           }
-          Ver vaga
         </a>
       </div>
     </article>
@@ -108,6 +123,12 @@ import { JobResult } from '../../models/job-result.model';
 })
 export class JobCardComponent {
   @Input({ required: true }) result!: JobResult;
+
+  get isDemo(): boolean {
+    return this.result.title.startsWith('[DEMO]') ||
+           this.result.source === 'Mock' ||
+           this.result.url.includes('jobs/search');
+  }
 
   /** Destaca palavras-chave com span colorido */
   highlightKeywords(text: string, keywords: string[]): string {

@@ -57,9 +57,11 @@ public class MockProvider(ILogger<MockProvider> logger) : IJobProvider
             var hoursAgo = Random.Shared.Next(1, 23);
             var jobId    = Random.Shared.NextInt64(3_000_000_000L, 4_000_000_000L);
 
-            var title   = $"{role} {kw} | {company}".Trim();
-            var snippet = BuildSnippet(company, role, location, keywords);
-            var url     = $"https://www.linkedin.com/jobs/view/{jobId}/";
+            var title   = $"[DEMO] {role} {kw} | {company}".Trim();
+            var snippet = $"⚠️ Dados de demonstração — configure um provedor real (Remotive, Jooble, Bing) em appsettings.json para ver vagas reais. | {BuildSnippet(company, role, location, keywords)}";
+            // URL aponta para busca real no LinkedIn (não um ID falso)
+            var kwSearch = Uri.EscapeDataString(kw.Length > 0 ? kw : string.Join(" ", keywords.Take(2)));
+            var url      = $"https://www.linkedin.com/jobs/search/?keywords={kwSearch}&location=Brasil";
 
             results.Add(JobResult.Create(
                 title, snippet, url,
