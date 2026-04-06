@@ -1,6 +1,7 @@
 using JobRadar.Application.DTOs;
 using JobRadar.Application.Interfaces;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 
 namespace JobRadar.API.Controllers;
 
@@ -15,8 +16,10 @@ public class JobsController(IJobSearchService searchService, ILogger<JobsControl
     /// <summary>Busca vagas pelos provedores configurados, ordenadas por relevância.</summary>
     /// <param name="keywords">Palavras-chave separadas por vírgula (ex: dotnet,aws,angular)</param>
     [HttpGet("search")]
+    [EnableRateLimiting("search")]
     [ProducesResponseType(typeof(SearchResponseDto), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status429TooManyRequests)]
     public async Task<IActionResult> Search([FromQuery] string keywords, CancellationToken ct)
     {
         if (string.IsNullOrWhiteSpace(keywords))

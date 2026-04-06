@@ -13,6 +13,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "JobRadar.Application", "bac
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "JobRadar.Infrastructure", "backend\JobRadar.Infrastructure\JobRadar.Infrastructure.csproj", "{4EDE7B16-B64E-483D-B157-F561E15D01DA}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "JobRadar.Tests", "backend\JobRadar.Tests\JobRadar.Tests.csproj", "{5E554857-9782-4254-B73C-DF8498A77F7A}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -71,6 +73,18 @@ Global
 		{4EDE7B16-B64E-483D-B157-F561E15D01DA}.Release|x64.Build.0 = Release|Any CPU
 		{4EDE7B16-B64E-483D-B157-F561E15D01DA}.Release|x86.ActiveCfg = Release|Any CPU
 		{4EDE7B16-B64E-483D-B157-F561E15D01DA}.Release|x86.Build.0 = Release|Any CPU
+		{5E554857-9782-4254-B73C-DF8498A77F7A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5E554857-9782-4254-B73C-DF8498A77F7A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5E554857-9782-4254-B73C-DF8498A77F7A}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{5E554857-9782-4254-B73C-DF8498A77F7A}.Debug|x64.Build.0 = Debug|Any CPU
+		{5E554857-9782-4254-B73C-DF8498A77F7A}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{5E554857-9782-4254-B73C-DF8498A77F7A}.Debug|x86.Build.0 = Debug|Any CPU
+		{5E554857-9782-4254-B73C-DF8498A77F7A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5E554857-9782-4254-B73C-DF8498A77F7A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5E554857-9782-4254-B73C-DF8498A77F7A}.Release|x64.ActiveCfg = Release|Any CPU
+		{5E554857-9782-4254-B73C-DF8498A77F7A}.Release|x64.Build.0 = Release|Any CPU
+		{5E554857-9782-4254-B73C-DF8498A77F7A}.Release|x86.ActiveCfg = Release|Any CPU
+		{5E554857-9782-4254-B73C-DF8498A77F7A}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -80,6 +94,7 @@ Global
 		{979E7263-3B72-44E3-A82C-14FDC417706B} = {1AE8ACA6-933B-BF2A-3671-3E2EAC007D16}
 		{3B779DA1-301B-4148-B1D5-BB7595E03E18} = {1AE8ACA6-933B-BF2A-3671-3E2EAC007D16}
 		{4EDE7B16-B64E-483D-B157-F561E15D01DA} = {1AE8ACA6-933B-BF2A-3671-3E2EAC007D16}
+		{5E554857-9782-4254-B73C-DF8498A77F7A} = {1AE8ACA6-933B-BF2A-3671-3E2EAC007D16}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {F939814F-0CC7-48AD-85C2-632647AC1BEE}

@@ -1,3 +1,4 @@
+using System.Threading.RateLimiting;
 using JobRadar.API.Middleware;
 using JobRadar.API.Workers;
 using JobRadar.Application.Interfaces;
@@ -7,6 +8,7 @@ using JobRadar.Domain.Services;
 using JobRadar.Infrastructure.Data;
 using JobRadar.Infrastructure.Providers;
 using JobRadar.Infrastructure.Repositories;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -17,6 +19,32 @@ builder.Services.AddDbContext<AppDbContext>(opt =>
 
 // ─── Cache ────────────────────────────────────────────────────────────────
 builder.Services.AddMemoryCache();
+
+// ─── Rate Limiting ────────────────────────────────────────────────────────
+// Proteção contra abuso: máx 30 req/min por IP no endpoint de busca.
+builder.Services.AddRateLimiter(opt =>
+{
+    opt.OnRejected = async (ctx, ct) =>
+    {
+        ctx.HttpContext.Response.StatusCode = StatusCodes.Status429TooManyRequests;
+        await ctx.HttpContext.Response.WriteAsJsonAsync(new
+        {
+            status  = 429,
+            title   = "Limite de requisições excedido",
+            detail  = "Máximo de 30 buscas por minuto por IP. Aguarde e tente novamente.",
+            retryAfterSeconds = 60
+        }, ct);
+    };
+
+    opt.AddSlidingWindowLimiter("search", o =>
+    {
+        o.PermitLimit         = 30;
+        o.Window              = TimeSpan.FromMinutes(1);
+        o.SegmentsPerWindow   = 6;   // janela dividida em segmentos de 10s
+        o.QueueProcessingOrder = QueueProcessingOrder.OldestFirst;
+        o.QueueLimit          = 2;
+    });
+});
 
 // ─── HttpClients ──────────────────────────────────────────────────────────
 builder.Services.AddHttpClient("Bing",      c => ConfigureClient(c));
@@ -93,6 +121,7 @@ using (var scope = app.Services.CreateScope())
 
 // ─── Middleware pipeline ──────────────────────────────────────────────────
 app.UseMiddleware<GlobalExceptionMiddleware>();
+app.UseRateLimiter();
 
 if (app.Environment.IsDevelopment())
 {
