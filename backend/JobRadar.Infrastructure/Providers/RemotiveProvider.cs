@@ -21,15 +21,34 @@ public class RemotiveProvider(
     public int Priority => 10;
     public bool IsConfigured => true;
 
+    /// <summary>
+    /// Remotive busca em título/descrição — usa termos "bonitos" para melhor recall.
+    /// </summary>
+    private static readonly IReadOnlyDictionary<string, string> DisplayMap =
+        new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
+        {
+            ["dotnet"]     = ".NET",
+            ["csharp"]     = "C#",
+            ["nodejs"]     = "Node.js",
+            ["aspnet"]     = "ASP.NET",
+            ["golang"]     = "Go",
+            ["kubernetes"] = "Kubernetes",
+        };
+
     public async Task<List<JobResult>> FetchAsync(Keywords keywords, CancellationToken ct = default)
     {
         var client   = httpFactory.CreateClient("Remotive");
         var results  = new List<JobResult>();
         var seenUrls = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
+        // Converte para termos legíveis antes de buscar
+        var displayTerms = keywords.Values
+            .Select(k => DisplayMap.TryGetValue(k, out var m) ? m : k)
+            .ToList();
+
         // Busca combinada + individuais para maximizar resultados
-        var searchTerms = new List<string> { string.Join(" ", keywords.Values) };
-        searchTerms.AddRange(keywords.Values.Take(2));
+        var searchTerms = new List<string> { string.Join(" ", displayTerms) };
+        searchTerms.AddRange(displayTerms.Take(2));
 
         foreach (var term in searchTerms)
         {

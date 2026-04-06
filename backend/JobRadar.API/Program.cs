@@ -47,18 +47,12 @@ builder.Services.AddRateLimiter(opt =>
 });
 
 // ─── HttpClients ──────────────────────────────────────────────────────────
-builder.Services.AddHttpClient("Bing",      c => ConfigureClient(c));
-builder.Services.AddHttpClient("Google",    c => ConfigureClient(c));
-builder.Services.AddHttpClient("Remotive",  c => ConfigureClient(c, timeout: 15));
-builder.Services.AddHttpClient("Jooble",    c => ConfigureClient(c));
-builder.Services.AddHttpClient("IndeedRss", c =>
-{
-    c.Timeout = TimeSpan.FromSeconds(15);
-    c.DefaultRequestHeaders.UserAgent.ParseAdd(
-        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/124.0.0.0 Safari/537.36");
-    c.DefaultRequestHeaders.Add("Accept", "application/rss+xml, text/xml");
-    c.DefaultRequestHeaders.Add("Accept-Language", "pt-BR,pt;q=0.9");
-});
+builder.Services.AddHttpClient("Bing",     c => ConfigureClient(c));
+builder.Services.AddHttpClient("Google",   c => ConfigureClient(c));
+builder.Services.AddHttpClient("Remotive", c => ConfigureClient(c, timeout: 15));
+builder.Services.AddHttpClient("Jooble",   c => ConfigureClient(c));
+builder.Services.AddHttpClient("Jobicy",   c => ConfigureClient(c, timeout: 15));
+builder.Services.AddHttpClient("Adzuna",   c => ConfigureClient(c, timeout: 15));
 
 static void ConfigureClient(HttpClient c, int timeout = 10)
 {
@@ -77,9 +71,10 @@ builder.Services.AddScoped<ISearchHistoryRepository, SearchHistoryRepository>();
 // Para adicionar um novo provedor: adicione uma linha aqui — zero mudanças no resto.
 builder.Services.AddScoped<IJobProvider, BingProvider>();
 builder.Services.AddScoped<IJobProvider, GoogleProvider>();
+builder.Services.AddScoped<IJobProvider, AdzunaProvider>();
 builder.Services.AddScoped<IJobProvider, JoobleProvider>();
 builder.Services.AddScoped<IJobProvider, RemotiveProvider>();
-builder.Services.AddScoped<IJobProvider, IndeedRssProvider>();
+builder.Services.AddScoped<IJobProvider, JobicyProvider>();
 builder.Services.AddScoped<IJobProvider, MockProvider>();
 
 // ─── Application Services ─────────────────────────────────────────────────
@@ -97,7 +92,7 @@ builder.Services.AddSwaggerGen(c =>
     {
         Title       = "JobRadar API",
         Version     = "v2",
-        Description = "Busca inteligente de vagas — Remotive · Indeed · LinkedIn · Bing · Google."
+        Description = "Busca inteligente de vagas — Jobicy · Remotive · Adzuna · Bing · Google."
     });
 });
 
