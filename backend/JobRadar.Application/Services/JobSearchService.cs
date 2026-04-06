@@ -177,8 +177,29 @@ public class JobSearchService(
             .ToList(),
         ResultType     = r.ResultType,
         RelativeTime   = ToRelativeTime(r.PublishedAt),
-        Source         = InferSource(r.Url)
+        Source         = InferSource(r.Url),
+        WorkplaceType  = InferWorkplaceType(r.Title, r.Snippet)
     };
+
+    private static string InferWorkplaceType(string title, string snippet)
+    {
+        var text = $"{title} {snippet}";
+
+        var remoteKeywords  = new[] { "remoto", "remote", "100% remoto", "home office", "trabalho remoto" };
+        var hybridKeywords  = new[] { "híbrido", "hibrido", "hybrid" };
+        var onsiteKeywords  = new[] { "presencial", "on-site", "onsite", "on site" };
+
+        if (hybridKeywords.Any(k => text.Contains(k, StringComparison.OrdinalIgnoreCase)))
+            return "hybrid";
+
+        if (remoteKeywords.Any(k => text.Contains(k, StringComparison.OrdinalIgnoreCase)))
+            return "remote";
+
+        if (onsiteKeywords.Any(k => text.Contains(k, StringComparison.OrdinalIgnoreCase)))
+            return "onsite";
+
+        return "";
+    }
 
     private static string InferSource(string url) =>
         url.Contains("gupy.io",       StringComparison.OrdinalIgnoreCase) ? "Gupy"      :

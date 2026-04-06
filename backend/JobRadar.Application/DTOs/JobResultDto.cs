@@ -13,4 +13,6 @@ public class JobResultDto
     public string ResultType { get; set; } = "job";
     public string RelativeTime { get; set; } = string.Empty;
     public string Source { get; set; } = string.Empty;
+    /// <summary>"remote" | "hybrid" | "onsite" | ""</summary>
+    public string WorkplaceType { get; set; } = string.Empty;
 }
