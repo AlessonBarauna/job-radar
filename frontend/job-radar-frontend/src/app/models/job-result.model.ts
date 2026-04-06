@@ -9,6 +9,7 @@ export interface JobResult {
   matchedKeywords: string[];
   resultType: 'job' | 'post';
   relativeTime: string;
+  source: string;
 }
 
 export interface SearchResponse {

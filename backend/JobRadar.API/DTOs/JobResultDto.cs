@@ -21,4 +21,7 @@ public class JobResultDto
 
     /// <summary>Tempo relativo de publicação (ex: "há 3 horas").</summary>
     public string RelativeTime { get; set; } = string.Empty;
+
+    /// <summary>Provedor de origem inferido pela URL (Remotive, Indeed, LinkedIn, etc.).</summary>
+    public string Source { get; set; } = string.Empty;
 }

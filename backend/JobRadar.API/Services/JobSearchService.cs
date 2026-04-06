@@ -10,12 +10,19 @@ namespace JobRadar.API.Services;
 
 /// <summary>
 /// Serviço principal de busca.
-/// Estratégia de provedor em cascata: Bing → Google CSE → Mock.
+/// Estratégia:
+///   1. Bing ou Google (se configurados) — retorna imediatamente.
+///   2. Remotive + Indeed Brasil em paralelo (gratuitos, sem API key) — combina os resultados.
+///   3. Jooble (se configurado).
+///   4. Mock como último fallback.
 /// Aplica cache de 15 minutos por conjunto de keywords.
 /// </summary>
 public class JobSearchService(
     IBingSearchService bingService,
     IGoogleCustomSearchService googleService,
+    IRemotiveSearchService remotiveService,
+    IIndeedRssSearchService indeedService,
+    IJoobleSearchService joobleService,
     IRelevanceService relevanceService,
     ISearchHistoryRepository historyRepo,
     IMemoryCache cache,
@@ -87,12 +94,12 @@ public class JobSearchService(
     }
 
     // -------------------------------------------------
-    // Cascata: tenta Bing → Google → Mock
+    // Cascata: Bing → Google → Remotive → Jooble → Mock
     // -------------------------------------------------
     private async Task<(List<JobResult>, string)> FetchFromProviderAsync(
         List<string> keywords, CancellationToken ct)
     {
-        // Bing
+        // Bing (requer BingApiKey em appsettings)
         if (bingService.IsConfigured)
         {
             try
@@ -107,7 +114,7 @@ public class JobSearchService(
             }
         }
 
-        // Google CSE
+        // Google CSE (requer GoogleApiKey + GoogleCseId em appsettings)
         if (googleService.IsConfigured)
         {
             try
@@ -118,18 +125,69 @@ public class JobSearchService(
             }
             catch (Exception ex)
             {
-                logger.LogWarning(ex, "Google falhou, usando Mock.");
+                logger.LogWarning(ex, "Google falhou, tentando Remotive.");
             }
         }
 
-        // Fallback mock (desenvolvimento)
-        logger.LogInformation("Usando provedor: Mock (configure BingApiKey ou GoogleApiKey para dados reais)");
+        // Remotive + Indeed Brasil em paralelo (gratuitos, sem API key)
+        logger.LogInformation("Usando provedores gratuitos: Remotive + Indeed Brasil (paralelo)");
+        var remotiveTask = FetchSafe(() => remotiveService.SearchAsync(keywords, ct), "Remotive");
+        var indeedTask   = FetchSafe(() => indeedService.SearchAsync(keywords, ct), "Indeed RSS");
+
+        await Task.WhenAll(remotiveTask, indeedTask);
+
+        var freeResults = remotiveTask.Result.Concat(indeedTask.Result).ToList();
+        if (freeResults.Count > 0)
+        {
+            var providerLabel = (remotiveTask.Result.Count > 0, indeedTask.Result.Count > 0) switch
+            {
+                (true, true)   => "Remotive + Indeed",
+                (true, false)  => "Remotive",
+                (false, true)  => "Indeed",
+                _              => "Gratuito"
+            };
+            return (freeResults, providerLabel);
+        }
+
+        // Jooble (gratuito com API key — vagas brasileiras)
+        if (joobleService.IsConfigured)
+        {
+            try
+            {
+                logger.LogInformation("Usando provedor: Jooble");
+                var results = await joobleService.SearchAsync(keywords, ct);
+                if (results.Count > 0) return (results, "Jooble");
+            }
+            catch (Exception ex)
+            {
+                logger.LogWarning(ex, "Jooble falhou, usando Mock.");
+            }
+        }
+
+        // Mock (fallback de desenvolvimento)
+        logger.LogInformation("Usando provedor: Mock");
         return (MockSearchService.Generate(keywords), "Mock");
     }
 
     // -------------------------------------------------
     // Helpers
     // -------------------------------------------------
+
+    /// <summary>
+    /// Executa uma busca capturando exceções — retorna lista vazia em caso de falha.
+    /// Usado para chamar provedores em paralelo sem interromper os demais.
+    /// </summary>
+    private async Task<List<JobResult>> FetchSafe(
+        Func<Task<List<JobResult>>> fetch, string providerName)
+    {
+        try { return await fetch(); }
+        catch (Exception ex)
+        {
+            logger.LogWarning(ex, "Provedor '{Provider}' falhou.", providerName);
+            return [];
+        }
+    }
+
     private static List<string> ParseKeywords(string input) =>
         input.Split([',', ';', ' '], StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
              .Where(k => k.Length >= 2)
@@ -148,8 +206,17 @@ public class JobSearchService(
         RelevanceScore = r.RelevanceScore,
         MatchedKeywords = r.MatchedKeywords.Split(',', StringSplitOptions.RemoveEmptyEntries).ToList(),
         ResultType = r.ResultType,
-        RelativeTime = ToRelativeTime(r.PublishedAt)
+        RelativeTime = ToRelativeTime(r.PublishedAt),
+        Source = InferSource(r.Url)
     };
+
+    private static string InferSource(string url) =>
+        url.Contains("remotive.com",  StringComparison.OrdinalIgnoreCase) ? "Remotive"  :
+        url.Contains("indeed.com",    StringComparison.OrdinalIgnoreCase) ? "Indeed"    :
+        url.Contains("linkedin.com",  StringComparison.OrdinalIgnoreCase) ? "LinkedIn"  :
+        url.Contains("jooble.org",    StringComparison.OrdinalIgnoreCase) ? "Jooble"    :
+        url.Contains("glassdoor.com", StringComparison.OrdinalIgnoreCase) ? "Glassdoor" :
+        "Externo";
 
     private static string ToRelativeTime(DateTime dt)
     {
