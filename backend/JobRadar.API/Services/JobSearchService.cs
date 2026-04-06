@@ -10,12 +10,14 @@ namespace JobRadar.API.Services;
 
 /// <summary>
 /// Serviço principal de busca.
-/// Estratégia de provedor em cascata: Bing → Google CSE → Mock.
+/// Estratégia de provedor em cascata: Bing → Google CSE → Remotive → Jooble → Mock.
 /// Aplica cache de 15 minutos por conjunto de keywords.
 /// </summary>
 public class JobSearchService(
     IBingSearchService bingService,
     IGoogleCustomSearchService googleService,
+    IRemotiveSearchService remotiveService,
+    IJoobleSearchService joobleService,
     IRelevanceService relevanceService,
     ISearchHistoryRepository historyRepo,
     IMemoryCache cache,
@@ -87,12 +89,12 @@ public class JobSearchService(
     }
 
     // -------------------------------------------------
-    // Cascata: tenta Bing → Google → Mock
+    // Cascata: Bing → Google → Remotive → Jooble → Mock
     // -------------------------------------------------
     private async Task<(List<JobResult>, string)> FetchFromProviderAsync(
         List<string> keywords, CancellationToken ct)
     {
-        // Bing
+        // Bing (requer BingApiKey em appsettings)
         if (bingService.IsConfigured)
         {
             try
@@ -107,7 +109,7 @@ public class JobSearchService(
             }
         }
 
-        // Google CSE
+        // Google CSE (requer GoogleApiKey + GoogleCseId em appsettings)
         if (googleService.IsConfigured)
         {
             try
@@ -118,12 +120,39 @@ public class JobSearchService(
             }
             catch (Exception ex)
             {
-                logger.LogWarning(ex, "Google falhou, usando Mock.");
+                logger.LogWarning(ex, "Google falhou, tentando Remotive.");
             }
         }
 
-        // Fallback mock (desenvolvimento)
-        logger.LogInformation("Usando provedor: Mock (configure BingApiKey ou GoogleApiKey para dados reais)");
+        // Remotive (gratuito, sem API key — vagas remotas reais)
+        try
+        {
+            logger.LogInformation("Usando provedor: Remotive");
+            var results = await remotiveService.SearchAsync(keywords, ct);
+            if (results.Count > 0) return (results, "Remotive");
+        }
+        catch (Exception ex)
+        {
+            logger.LogWarning(ex, "Remotive falhou, tentando Jooble.");
+        }
+
+        // Jooble (gratuito com API key — vagas brasileiras)
+        if (joobleService.IsConfigured)
+        {
+            try
+            {
+                logger.LogInformation("Usando provedor: Jooble");
+                var results = await joobleService.SearchAsync(keywords, ct);
+                if (results.Count > 0) return (results, "Jooble");
+            }
+            catch (Exception ex)
+            {
+                logger.LogWarning(ex, "Jooble falhou, usando Mock.");
+            }
+        }
+
+        // Mock (fallback de desenvolvimento)
+        logger.LogInformation("Usando provedor: Mock");
         return (MockSearchService.Generate(keywords), "Mock");
     }
 

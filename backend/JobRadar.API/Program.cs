@@ -26,10 +26,22 @@ builder.Services.AddHttpClient("Google", c =>
     c.Timeout = TimeSpan.FromSeconds(10);
     c.DefaultRequestHeaders.UserAgent.ParseAdd("JobRadar/1.0");
 });
+builder.Services.AddHttpClient("Remotive", c =>
+{
+    c.Timeout = TimeSpan.FromSeconds(15);
+    c.DefaultRequestHeaders.UserAgent.ParseAdd("JobRadar/1.0");
+});
+builder.Services.AddHttpClient("Jooble", c =>
+{
+    c.Timeout = TimeSpan.FromSeconds(10);
+    c.DefaultRequestHeaders.UserAgent.ParseAdd("JobRadar/1.0");
+});
 
 // ─── Services ────────────────────────────────────────────────────────────────
 builder.Services.AddScoped<IBingSearchService, BingSearchService>();
 builder.Services.AddScoped<IGoogleCustomSearchService, GoogleCustomSearchService>();
+builder.Services.AddScoped<IRemotiveSearchService, RemotiveSearchService>();
+builder.Services.AddScoped<IJoobleSearchService, JoobleSearchService>();
 builder.Services.AddScoped<IRelevanceService, RelevanceService>();
 builder.Services.AddScoped<ISearchHistoryRepository, SearchHistoryRepository>();
 builder.Services.AddScoped<IJobSearchService, JobSearchService>();
