@@ -10,6 +10,7 @@ export interface JobResult {
   resultType: 'job' | 'post';
   relativeTime: string;
   source: string;
+  workplaceType: 'remote' | 'hybrid' | 'onsite' | '';
 }
 
 export interface SearchResponse {
