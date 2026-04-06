@@ -1,7 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { SearchResponse, SearchHistory } from '../models/job-result.model';
+import { SearchResponse, SearchHistory, ReportResponse } from '../models/job-result.model';
 import { environment } from '../../environments/environment';
 
 @Injectable({ providedIn: 'root' })
@@ -24,5 +24,10 @@ export class JobSearchService {
   getHistory(limit = 10): Observable<SearchHistory[]> {
     const params = new HttpParams().set('limit', limit.toString());
     return this.http.get<SearchHistory[]>(`${this.apiUrl}/api/history`, { params });
+  }
+
+  generateReport(keywords: string): Observable<ReportResponse> {
+    const params = new HttpParams().set('keywords', keywords);
+    return this.http.get<ReportResponse>(`${this.apiUrl}/api/report/generate`, { params });
   }
 }

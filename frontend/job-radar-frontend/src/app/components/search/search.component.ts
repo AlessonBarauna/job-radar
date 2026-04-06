@@ -4,14 +4,15 @@ import {
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { JobSearchService } from '../../services/job-search.service';
-import { SearchResponse, SearchHistory } from '../../models/job-result.model';
+import { SearchResponse, SearchHistory, ReportResponse } from '../../models/job-result.model';
 import { ResultsComponent } from '../results/results.component';
 import { HistoryComponent } from '../history/history.component';
+import { ReportComponent } from '../report/report.component';
 
 @Component({
   selector: 'app-search',
   standalone: true,
-  imports: [CommonModule, FormsModule, ResultsComponent, HistoryComponent],
+  imports: [CommonModule, FormsModule, ResultsComponent, HistoryComponent, ReportComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="min-h-screen flex flex-col">
@@ -66,15 +67,14 @@ import { HistoryComponent } from '../history/history.component';
                 class="cyber-input pl-10"
                 placeholder="dotnet, aws, angular, python, react..."
                 autocomplete="off"
-                [disabled]="loading()"
+                [disabled]="loading() || loadingReport()"
                 (keydown.enter)="onSearch()">
             </div>
 
             <button type="submit"
                     class="cyber-btn whitespace-nowrap"
-                    [disabled]="loading() || !searchInput.trim()">
+                    [disabled]="loading() || loadingReport() || !searchInput.trim()">
               @if (loading()) {
-                <!-- Spinner animado -->
                 <svg class="animate-spin w-4 h-4" viewBox="0 0 24 24" fill="none">
                   <circle class="opacity-25" cx="12" cy="12" r="10"
                           stroke="currentColor" stroke-width="4"/>
@@ -88,6 +88,26 @@ import { HistoryComponent } from '../history/history.component';
                         d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
                 </svg>
                 Buscar
+              }
+            </button>
+
+            <!-- Botão Relatório IA -->
+            <button type="button"
+                    (click)="onGenerateReport()"
+                    class="whitespace-nowrap text-sm font-semibold px-4 py-2 rounded-lg transition-all duration-200 flex items-center gap-2"
+                    [disabled]="loading() || loadingReport() || !searchInput.trim()"
+                    style="background:rgba(139,92,246,0.15);color:#a78bfa;border:1px solid rgba(139,92,246,0.35)"
+                    [style.opacity]="loading() || loadingReport() || !searchInput.trim() ? '0.4' : '1'">
+              @if (loadingReport()) {
+                <svg class="animate-spin w-4 h-4" viewBox="0 0 24 24" fill="none">
+                  <circle class="opacity-25" cx="12" cy="12" r="10"
+                          stroke="currentColor" stroke-width="4"/>
+                  <path class="opacity-75" fill="currentColor"
+                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
+                </svg>
+                Gerando...
+              } @else {
+                🤖 Relatório IA
               }
             </button>
           </form>
@@ -117,11 +137,47 @@ import { HistoryComponent } from '../history/history.component';
           </div>
         }
 
+        <!-- ─── Toggle vagas / relatório ─────────────── -->
+        @if (searchResponse() || reportResponse()) {
+          <div class="flex gap-2 mb-6 max-w-xs">
+            <button (click)="activeView.set('results')"
+                    class="flex-1 text-xs px-3 py-1.5 rounded-lg font-mono transition-all duration-200"
+                    [class]="activeView() === 'results'
+                      ? 'bg-cyber-blue/20 text-cyber-blue border border-cyber-blue/40'
+                      : 'text-gray-500 border border-cyber-border/60 hover:border-cyber-blue/30'">
+              ⚡ Vagas
+            </button>
+            <button (click)="activeView.set('report')"
+                    class="flex-1 text-xs px-3 py-1.5 rounded-lg font-mono transition-all duration-200"
+                    [class]="activeView() === 'report'
+                      ? 'bg-cyber-purple/20 text-cyber-purple border border-cyber-purple/40'
+                      : 'text-gray-500 border border-cyber-border/60 hover:border-cyber-purple/30'">
+              🤖 Relatório IA
+            </button>
+          </div>
+        }
+
         <!-- ─── Content: results + history ────────────── -->
         <div class="flex flex-col lg:flex-row gap-6">
 
           <!-- Results (coluna principal) -->
           <div class="flex-1 min-w-0">
+
+            <!-- View: Relatório IA -->
+            @if (activeView() === 'report') {
+              @if (loadingReport()) {
+                <div class="cyber-card text-center py-16">
+                  <div class="text-4xl mb-4 animate-pulse">🤖</div>
+                  <p class="text-gray-400 font-mono text-sm">Analisando mercado e gerando relatório...</p>
+                  <p class="text-gray-600 font-mono text-xs mt-2">Isso pode levar alguns segundos</p>
+                </div>
+              } @else if (reportResponse()) {
+                <app-report [report]="reportResponse()" />
+              }
+            }
+
+            <!-- View: Vagas -->
+            @if (activeView() === 'results') {
             @if (searchResponse()) {
               <app-results [response]="searchResponse()" />
             } @else if (!loading() && hasSearched()) {
@@ -148,6 +204,7 @@ import { HistoryComponent } from '../history/history.component';
                 </div>
               </div>
             }
+            } <!-- fecha @if activeView === results -->
 
             <!-- Loading skeleton -->
             @if (loading()) {
@@ -227,11 +284,14 @@ export class SearchComponent implements OnInit {
 
   // ─── State (signals) ─────────────────────────────────────────
   searchInput = '';
-  loading = signal(false);
-  error = signal<string | null>(null);
+  loading        = signal(false);
+  loadingReport  = signal(false);
+  error          = signal<string | null>(null);
   searchResponse = signal<SearchResponse | null>(null);
-  history = signal<SearchHistory[]>([]);
-  hasSearched = signal(false);
+  reportResponse = signal<ReportResponse | null>(null);
+  history        = signal<SearchHistory[]>([]);
+  hasSearched    = signal(false);
+  activeView     = signal<'results' | 'report'>('results');
 
   skeletons = Array(6).fill(0);
 
@@ -254,6 +314,27 @@ export class SearchComponent implements OnInit {
   quickSearch(keywords: string): void {
     this.searchInput = keywords;
     this.executeSearch(keywords);
+  }
+
+  onGenerateReport(): void {
+    const kw = this.searchInput.trim();
+    if (!kw || this.loadingReport()) return;
+
+    this.loadingReport.set(true);
+    this.error.set(null);
+    this.activeView.set('report');
+
+    this.jobSearchService.generateReport(kw).subscribe({
+      next: (res) => {
+        this.reportResponse.set(res);
+        this.loadingReport.set(false);
+      },
+      error: (err) => {
+        this.error.set(err?.error?.detail ?? 'Erro ao gerar relatório. Verifique se a chave OpenAI está configurada.');
+        this.loadingReport.set(false);
+        this.activeView.set('results');
+      }
+    });
   }
 
   private executeSearch(keywords: string): void {

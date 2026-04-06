@@ -7,6 +7,7 @@ using JobRadar.Domain.Repositories;
 using JobRadar.Domain.Services;
 using JobRadar.Infrastructure.Data;
 using JobRadar.Infrastructure.Providers;
+using JobRadar.Infrastructure.Services;
 using JobRadar.Infrastructure.Repositories;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
@@ -54,6 +55,7 @@ builder.Services.AddHttpClient("Jooble",   c => ConfigureClient(c));
 builder.Services.AddHttpClient("Jobicy",   c => ConfigureClient(c, timeout: 15));
 builder.Services.AddHttpClient("Adzuna",   c => ConfigureClient(c, timeout: 15));
 builder.Services.AddHttpClient("Gupy",     c => ConfigureClient(c, timeout: 15));
+builder.Services.AddHttpClient("OpenAi",   c => ConfigureClient(c, timeout: 60));
 
 static void ConfigureClient(HttpClient c, int timeout = 10)
 {
@@ -79,8 +81,12 @@ builder.Services.AddScoped<IJobProvider, JobicyProvider>();
 builder.Services.AddScoped<IJobProvider, GupyProvider>();
 builder.Services.AddScoped<IJobProvider, MockProvider>();
 
+// ─── LLM ──────────────────────────────────────────────────────────────────
+builder.Services.AddScoped<ILlmService, OpenAiLlmService>();
+
 // ─── Application Services ─────────────────────────────────────────────────
 builder.Services.AddScoped<IJobSearchService, JobSearchService>();
+builder.Services.AddScoped<IReportService, ReportService>();
 
 // ─── Background Worker ────────────────────────────────────────────────────
 builder.Services.AddHostedService<JobCollectorWorker>();
