@@ -23,6 +23,14 @@ export interface SearchResponse {
   fromCache: boolean;
 }
 
+export interface ReportResponse {
+  keywords: string;
+  markdown: string;
+  generatedAt: string;
+  elapsedMs: number;
+  fromCache: boolean;
+}
+
 export interface SearchHistory {
   id: number;
   keywords: string;
